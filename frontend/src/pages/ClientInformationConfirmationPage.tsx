@@ -5,7 +5,7 @@ import LogOutButton from "../components/LogOutButton";
 import { useShallow } from "zustand/shallow";
 import ConfirmClientButton from "../components/ConfirmClientButton";
 import ColorBends from "../components/ColorBends";
-function ClientInformationConfirmationPage() {
+function ClientInformationConfirmationPage({ name }: { name: string }) {
   const clientInfo = React.useMemo(
     () => ClientInfoStore(useShallow((state) => state.clientInfo)),
     []
@@ -30,7 +30,7 @@ function ClientInformationConfirmationPage() {
         className="vertical-center"
         style={{ position: "relative", zIndex: 10 }}
       >
-        <h2>Client Information:</h2>
+        <h2>Client Information submitted by {name}:</h2>
         <pre>{JSON.stringify(clientInfo, null, 2)}</pre>
         <ClearClientButton />
         <LogOutButton />
