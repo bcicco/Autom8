@@ -1,7 +1,5 @@
 import LogOutButton from "../components/LogOutButton";
-import UserStore from "../stores/UserStore";
 import ClientInformationForm from "../components/ClientInformationForm";
-import React from "react";
 import ColorBends from "../components/ColorBends";
 function UploadClientInfoPage({ name }: { name: string }) {
   return (
