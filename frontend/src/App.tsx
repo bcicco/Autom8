@@ -6,8 +6,6 @@ import ClientInformationConfirmationPage from "./pages/ClientInformationConfirma
 import AgentPage from "./pages/AgentPage";
 import PhaseStore from "./stores/StateStore";
 import { useShallow } from "zustand/shallow";
-import UserStore from "./stores/UserStore";
-import React from "react";
 function App() {
   const phase = PhaseStore(useShallow((state) => state.phase));
 
