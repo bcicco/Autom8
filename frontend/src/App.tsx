@@ -9,8 +9,6 @@ import { useShallow } from "zustand/shallow";
 import UserStore from "./stores/UserStore";
 import React from "react";
 function App() {
-  const user = React.useMemo(() => UserStore.getState().user, []);
-
   const phase = PhaseStore(useShallow((state) => state.phase));
 
   if (phase === "login") {
