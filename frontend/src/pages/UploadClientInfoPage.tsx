@@ -3,9 +3,7 @@ import UserStore from "../stores/UserStore";
 import ClientInformationForm from "../components/ClientInformationForm";
 import React from "react";
 import ColorBends from "../components/ColorBends";
-function UploadClientInfoPage() {
-  const user = React.useMemo(() => UserStore.getState().user, []);
-
+function UploadClientInfoPage({ name }: { name: string }) {
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
       {/* Fullscreen background */}
@@ -26,7 +24,7 @@ function UploadClientInfoPage() {
         className="vertical-center"
         style={{ position: "relative", zIndex: 10 }}
       >
-        <h1>Welcome, {user.username}!</h1>
+        <h1>Welcome, {name}!</h1>
         <p> Please upload your client information:</p>
         <ClientInformationForm />
         <LogOutButton />

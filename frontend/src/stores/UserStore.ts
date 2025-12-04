@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
 type User = {
-  username: string | null;
-  id: number | null;
+  username: string;
+  id: number;
 };
 
 type UserState = {
@@ -12,11 +12,11 @@ type UserState = {
 };
 
 const UserStore = create<UserState>((set) => ({
-  user: { username: null, id: null },
+  user: { username: "loggedout", id: -1 },
   instantiateUser: (username: string, id: number) =>
     set({ user: { username: username, id: id } }),
   logOutUser() {
-    set({ user: { username: null, id: null } });
+    set({ user: { username: "loggedout", id: -1 } });
   },
 }));
 

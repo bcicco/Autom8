@@ -38,6 +38,7 @@ function LoginForm() {
       e.preventDefault();
       console.log("attempting to login....");
       console.log("login successul!");
+      console.log("Login details:", loginDetails);
       instantiateUser(loginDetails.username, 1);
       instantiatePhase("uploadClientInfo");
     };
