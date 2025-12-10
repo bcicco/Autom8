@@ -2,9 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import React from "react";
 import UserStore from "../stores/UserStore";
 
+interface UserInputRequest {
+  field_name: string;
+  prompt: string;
+  input_type: "text" | "code" | "choice" | "confirmation";
+  options?: string[];
+}
+
 const LaunchAgentForm = () => {
   const [screenshot, setScreenshot] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [userInputRequest, setUserInputRequest] =
+    useState<UserInputRequest | null>(null);
+  const [userInputValue, setUserInputValue] = useState<string>("");
   const user = React.useMemo(() => UserStore.getState().user, []);
   const ws = useRef<WebSocket | null>(null);
 
@@ -23,6 +33,10 @@ const LaunchAgentForm = () => {
         setStatus(data.message);
       } else if (data.type === "error") {
         setStatus(`Error: ${data.message}`);
+      } else if (data.type === "user_input_request") {
+        console.log("User input requested:", data.data);
+        setUserInputRequest(data.data);
+        setUserInputValue("");
       }
     };
 
@@ -51,19 +65,90 @@ const LaunchAgentForm = () => {
     });
   }
 
+  function handleUserInputSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (ws.current && userInputRequest) {
+      ws.current.send(
+        JSON.stringify({
+          type: "user_input_response",
+          value: userInputValue,
+        })
+      );
+
+      setUserInputRequest(null);
+      setUserInputValue("");
+      setStatus("Input submitted, continuing automation...");
+    }
+  }
+
+  function handleChoiceSelection(choice: string) {
+    if (ws.current && userInputRequest) {
+      ws.current.send(
+        JSON.stringify({
+          type: "user_input_response",
+          value: choice,
+        })
+      );
+
+      setUserInputRequest(null);
+      setStatus("Choice submitted, continuing automation...");
+    }
+  }
+
   return (
     <div>
-      <form onSubmit={handleSubmit} style={{ flexDirection: "column" }}>
-        <label>URL</label>
-        <input
-          type="text"
-          name="url"
-          defaultValue="https://fill.dev/form/login-simple"
-        />
-        <button type="submit">Launch Agent</button>
-      </form>
+      <div>
+        <form onSubmit={handleSubmit}>
+          <label>URL</label>
+          <input
+            type="text"
+            name="url"
+            defaultValue="https://fill.dev/form/login-simple"
+          />
+          <button type="submit">Launch Agent</button>
+        </form>
 
-      {status && <p>Status: {status}</p>}
+        {status && <p>Status: {status}</p>}
+
+        {userInputRequest && (
+          <div>
+            <h3>Input Required</h3>
+            <p>{userInputRequest.prompt}</p>
+
+            {userInputRequest.input_type === "choice" &&
+            userInputRequest.options ? (
+              <div>
+                {userInputRequest.options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleChoiceSelection(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <form onSubmit={handleUserInputSubmit}>
+                <input
+                  type="text"
+                  value={userInputValue}
+                  onChange={(e) => setUserInputValue(e.target.value)}
+                  placeholder={
+                    userInputRequest.input_type === "code"
+                      ? "Enter verification code"
+                      : "Enter value"
+                  }
+                  autoFocus
+                />
+                <button type="submit" disabled={!userInputValue.trim()}>
+                  Submit
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
 
       {screenshot && (
         <div>
@@ -71,11 +156,7 @@ const LaunchAgentForm = () => {
           <img
             src={screenshot}
             alt="Browser screenshot"
-            style={{
-              width: "100%",
-              maxWidth: "800px",
-              border: "1px solid #ccc",
-            }}
+            style={{ maxWidth: "60%", height: "auto" }}
           />
         </div>
       )}
