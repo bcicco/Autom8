@@ -21,6 +21,7 @@ app = fastapi.FastAPI()
 
 active_connections = {}
 agents = {}
+main_event_loop = None  # Store the main event loop
 
 from pydantic import BaseModel
 
@@ -28,6 +29,11 @@ from pydantic import BaseModel
 class TriggerRequest(BaseModel):
     url: str
     user_id: str
+
+
+class UserInputResponse(BaseModel):
+    user_id: str
+    value: str
 
 
 app.add_middleware(
@@ -58,8 +64,10 @@ def health_check():
 
 
 @app.on_event("startup")
-def start_timer():
-    asyncio.create_task(display_agent_udates(5))
+async def start_timer():
+    global main_event_loop
+    main_event_loop = asyncio.get_event_loop()
+    asyncio.create_task(display_agent_udates(2))
 
 
 @app.websocket("/ws/{user_id}")
@@ -70,9 +78,18 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
     try:
         while True:
-
-            data = await websocket.receive_text()
+            data = await websocket.receive_json()
             print(f"Received from {user_id}: {data}")
+
+            # Handle user input responses
+            if data.get("type") == "user_input_response":
+                if user_id in agents:
+                    agents[user_id].provide_user_input(data.get("value"))
+                    print(f"Provided user input to agent: {data.get('value')}")
+
+                    # Send screenshot immediately after user provides input
+                    await send_screenshot(user_id, "Processing user input...")
+
     except WebSocketDisconnect:
         del active_connections[user_id]
         print(f"WebSocket disconnected: {user_id}")
@@ -90,16 +107,33 @@ def trigger_endpoint(request: TriggerRequest):
             # chrome_options.add_argument("--headless=new")
 
             driver = webdriver.Chrome(options=chrome_options)
-            agents[request.user_id] = DeepSeekClient(settings.DEEP_SEEK_API_KEY, driver)
+
+            # Create send_message callback for this user
+            async def send_to_user(data: dict):
+                await send_message(request.user_id, data)
+
+                # If it's a user input request, also send screenshot immediately
+                if data.get("type") == "user_input_request":
+                    await send_screenshot(request.user_id, "Waiting for user input...")
+
+            agents[request.user_id] = DeepSeekClient(
+                settings.DEEP_SEEK_API_KEY,
+                driver,
+                send_message_callback=send_to_user,
+                main_loop=main_event_loop,  # Use the stored main loop
+            )
 
             agents[request.user_id].start(request)
 
         except Exception as e:
             print(f"Error in browser automation: {e}")
-            send_message(request.user_id, {"type": "error", "message": str(e)})
-        print("running start_agent() in main.py")
+            import traceback
 
-    start_agent()
+            traceback.print_exc()
+
+    # Start agent in a separate thread
+    thread = threading.Thread(target=start_agent)
+    thread.start()
 
     return {"status": "triggered", "user_id": request.user_id}
 
@@ -107,7 +141,7 @@ def trigger_endpoint(request: TriggerRequest):
 async def send_screenshot(user_id: str, message: str = ""):
     """Capture screenshot and send to specific user's websocket"""
     try:
-        if user_id in agents:
+        if user_id in agents and user_id in active_connections:
             screenshot = agents[user_id].driver.get_screenshot_as_png()
             b64_screenshot = base64.b64encode(screenshot).decode()
 
@@ -125,6 +159,7 @@ async def send_message(user_id: str, data: dict):
     """Send any message to specific user"""
     try:
         if user_id in active_connections:
-            asyncio.run(active_connections[user_id].send_json(data))
+            await active_connections[user_id].send_json(data)
+            print(f"Sent message to {user_id}: {data.get('type')}")
     except Exception as e:
         print(f"Error sending message: {e}")
