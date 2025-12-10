@@ -77,6 +77,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     print(f"WebSocket connected: {user_id}")
 
     try:
+        # Main Loop
         while True:
             data = await websocket.receive_json()
             print(f"Received from {user_id}: {data}")
@@ -89,13 +90,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
                     # Send screenshot immediately after user provides input
                     await send_screenshot(user_id, "Processing user input...")
-
+    # remove conn. on disconnect
     except WebSocketDisconnect:
         del active_connections[user_id]
         print(f"WebSocket disconnected: {user_id}")
 
 
 @app.post("/trigger")
+# triggeres the instnatiation and start of an agent
 def trigger_endpoint(request: TriggerRequest):
     print(f"Triggered action with URL: {request.url} and session {request.user_id}")
 
@@ -108,11 +110,10 @@ def trigger_endpoint(request: TriggerRequest):
 
             driver = webdriver.Chrome(options=chrome_options)
 
-            # Create send_message callback for this user
+            # send_message_callback for the user (see DeepSeekClient)
             async def send_to_user(data: dict):
                 await send_message(request.user_id, data)
 
-                # If it's a user input request, also send screenshot immediately
                 if data.get("type") == "user_input_request":
                     await send_screenshot(request.user_id, "Waiting for user input...")
 
@@ -120,7 +121,7 @@ def trigger_endpoint(request: TriggerRequest):
                 settings.DEEP_SEEK_API_KEY,
                 driver,
                 send_message_callback=send_to_user,
-                main_loop=main_event_loop,  # Use the stored main loop
+                main_loop=main_event_loop,  # not the agent loop
             )
 
             agents[request.user_id].start(request)
