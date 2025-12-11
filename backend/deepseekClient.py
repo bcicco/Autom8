@@ -1,25 +1,20 @@
 import os
 from openai import OpenAI
-from config import settings
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 import json
-from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 import threading
-from typing import Literal
 import time
 import asyncio
-import re
 from helpers.deepseekHelpers import (
     generate_system_prompt_html,
     generate_system_prompt_decision,
 )
 from models.LLMSchema import FormSchema, DecisionResponse, UserInputRequest
+from typing import Dict, Any
 
 
 class DeepSeekClient:
