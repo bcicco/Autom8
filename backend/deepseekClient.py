@@ -109,8 +109,8 @@ class DeepSeekClient:
         print("=" * 60)
 
         try:
-            cleaned_content = self.clean_json_response(raw_content)
-            json_response = json.loads(cleaned_content)
+
+            json_response = json.loads(raw_content)
             print("LLM DECISION RESPONSE:")
             print(json.dumps(json_response, indent=2))
             print("=" * 60)
