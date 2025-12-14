@@ -13,6 +13,7 @@ from helpers.deepseekHelpers import (
     generate_system_prompt_html,
     generate_system_prompt_decision,
 )
+from helpers.htmlCleaner import clean_html_for_llm
 from models.LLMSchema import FormSchema, DecisionResponse, UserInputRequest
 from typing import Dict, Any
 
@@ -28,17 +29,19 @@ class DeepSeekClient:
         self.username = "ben"
         self.password = "password123"
         self.action_history = []
-        self.user_data = {
-            "email": "ben@example.com",
-            "phone": "+1234567890",
-            "first_name": "Ben",
-            "last_name": "Smith",
-            "address": "123 Main St",
-            "city": "San Francisco",
-            "state": "CA",
-            "zip": "94102",
-            "country": "USA",
-        }
+        self.user_data = (
+            {  # will replace this with real data from frontend at some point
+                "email": "ben@example.com",
+                "phone": "+1234567890",
+                "first_name": "Ben",
+                "last_name": "Smith",
+                "address": "123 Main St",
+                "city": "San Francisco",
+                "state": "CA",
+                "zip": "94102",
+                "country": "USA",
+            }
+        )
         self.send_message_callback = send_message_callback
         self.main_loop = main_loop  #  Reference to main event loop running in main.py
         self.pending_user_input = None
@@ -52,10 +55,12 @@ class DeepSeekClient:
 
     def analyze_form_html(self, html_content: str) -> FormSchema:
         """Extract form schema from HTML using DeepSeek with JSON output"""
-
+        print("Length of original HTML: ", len(html_content))
+        clean_html = clean_html_for_llm(html_content)
+        print("Length of cleaned HTML: ", len(clean_html))
         response = self.client.chat.completions.create(
             model="deepseek-chat",
-            messages=generate_system_prompt_html(html_content),
+            messages=generate_system_prompt_html(clean_html),
             response_format={"type": "json_object"},
         )
 

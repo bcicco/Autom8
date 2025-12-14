@@ -10,4 +10,5 @@ dependencies = [
 "dotenv",
 "openai",
 "pydantic-settings",
-"selenium "]
+"selenium",
+"bs4"]

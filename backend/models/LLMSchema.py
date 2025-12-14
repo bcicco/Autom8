@@ -2,17 +2,11 @@ from pydantic import BaseModel
 from typing import List, Optional, Literal, Dict, Any
 
 
-class Option(BaseModel):
-    value: str
-    label: str
-    selected: Optional[bool] = False
-
-
 class FormField(BaseModel):
     name: str
     type: str
     label: Optional[str] = None
-    options: Optional[List[Option]] = None
+    option_description: Optional[List[str]] = None
     required: bool = False
     placeholder: Optional[str] = None
     current_value: Optional[str] = None

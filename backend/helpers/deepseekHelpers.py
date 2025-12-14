@@ -16,6 +16,7 @@ IMPORTANT:
 - For buttons, capture their text content, CSS selectors, type, and any identifying attributes.
 - CRITICAL: Keep your response concise. Only extract the ESSENTIAL form fields and buttons. Don't include every single element if there are many.
 - Prioritize: visible input fields, submit buttons, navigation buttons, and form controls the user needs to interact with.
+- For dropdowns with options, provide up to five examples of real possible selections
 
 Return your response as a JSON object in this exact format (no markdown, no explanation):
 {
@@ -24,9 +25,14 @@ Return your response as a JSON object in this exact format (no markdown, no expl
             "name": "field_name",
             "type": "text",
             "label": "Field Label",
-            "options": [
-                {"value": "option1", "label": "Option 1", "selected": true},
-                {"value": "option2", "label": "Option 2", "selected": false}],
+            "option_description": [
+                "example1",
+                "example2",
+                "example3",
+                "example4",
+                "example5"
+            ],
+
             "required": false,
             "placeholder": "Enter text",
             "current_value": null,
@@ -80,11 +86,13 @@ def generate_system_prompt_decision(form_info: str, history_str: str) -> str:
     return [
         {
             "role": "system",
-            "content": """You are an intelligent form-filling assistant. Analyze the webpage and decide what SEQUENCE of actions to take to complete it. 
+            "content": """You are an intelligent form-filling assistant. Analyze the webpage and decide what SEQUENCE of actions to take to complete it.
 
 Available user data:
 - username: "ben.cicco@yahoo.com"
 - password: "Ben10%123098765"
+- visa type: "student"
+- country: "Equador"
 
 
 Action types:
@@ -110,7 +118,7 @@ CRITICAL RULES:
 7. When requesting user input, provide clear prompts and specify the input type
 8. Do NOT repeat actions that have already been taken (check action history)
 9. If ALL required fields are already filled and the form has been successfully submitted, return status "complete" with empty actions array
-
+10. Option_description provides only examples of the possible options, not the complete set of options. It is included to help you understand how the value should be formatted (e.g caps, abbrievations)
 CRITICAL FOR TIME-SENSITIVE AUTHENTICATION CODES:
 10. When requesting authentication codes (2FA, OTP, verification codes), you MUST include ALL subsequent actions in the SAME action sequence
 11. Example sequence: [request_user_input for code] → [fill_form with code] → [click_button to submit]
