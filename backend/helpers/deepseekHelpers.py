@@ -12,10 +12,9 @@ def generate_system_prompt_html(html_content: str) -> list:
 
 IMPORTANT: 
 - Look for the 'value' attribute in form fields to capture pre-filled values.
-- Detect ALL buttons including: submit buttons, regular buttons, close buttons (X), modal dismiss buttons, navigation buttons, etc.
+- Extract EVERY SINGLE button on the page - do not skip any buttons
 - For buttons, capture their text content, CSS selectors, type, and any identifying attributes.
-- CRITICAL: Keep your response concise. Only extract the ESSENTIAL form fields and buttons. Don't include every single element if there are many.
-- Prioritize: visible input fields, submit buttons, navigation buttons, and form controls the user needs to interact with.
+- CRITICAL: You MUST include ALL buttons in your response - count them to verify completeness
 - For dropdowns with options, provide up to five examples of real possible selections
 
 Return your response as a JSON object in this exact format (no markdown, no explanation):
@@ -32,7 +31,6 @@ Return your response as a JSON object in this exact format (no markdown, no expl
                 "example4",
                 "example5"
             ],
-
             "required": false,
             "placeholder": "Enter text",
             "current_value": null,
@@ -72,12 +70,13 @@ Return your response as a JSON object in this exact format (no markdown, no expl
 
 Note: 
 - current_value should contain the value attribute of the input field if present, otherwise null.
-- buttons array should include ALL clickable buttons found on the page, not just submit buttons.
-- button_type should indicate the purpose: "submit", "button", "close", "link", "navigation", etc.""",
+- buttons array MUST include EVERY SINGLE clickable button found on the page - this is critical for navigation
+- button_type should indicate the purpose: "submit", "button", "close", "link", "navigation", etc.
+- DO NOT truncate or limit the buttons array - include all of them even if there are 20+ buttons""",
         },
         {
             "role": "user",
-            "content": f"Analyze this HTML and extract ONLY the essential form input fields AND important buttons (submit, navigation, close). Keep response under 10KB. Return as JSON:\n\n{html_content}",
+            "content": f"Analyze this HTML and extract ALL form input fields AND ALL buttons. CRITICAL: Include every single button in the buttons array - do not skip any. Return as JSON:\n\n{html_content}",
         },
     ]
 
@@ -119,12 +118,13 @@ CRITICAL RULES:
 8. Do NOT repeat actions that have already been taken (check action history)
 9. If ALL required fields are already filled and the form has been successfully submitted, return status "complete" with empty actions array
 10. Option_description provides only examples of the possible options, not the complete set of options. It is included to help you understand how the value should be formatted (e.g caps, abbrievations)
+11. With the exception of time sensitive codes, never include a submit action in a series of actions where you are taking other actions to ensure that previous actions do not produce any unexpected changes, e.g dropdowns etc. 
 CRITICAL FOR TIME-SENSITIVE AUTHENTICATION CODES:
-10. When requesting authentication codes (2FA, OTP, verification codes), you MUST include ALL subsequent actions in the SAME action sequence
-11. Example sequence: [request_user_input for code] → [fill_form with code] → [click_button to submit]
-12. DO NOT stop after request_user_input - continue with all remaining actions that use that input
-13. The user will provide the value, and ALL actions will execute in rapid succession without re-analyzing the page
-14. This prevents authentication codes from expiring before submission
+12. When requesting authentication codes (2FA, OTP, verification codes), you MUST include ALL subsequent actions in the SAME action sequence
+13. Example sequence: [request_user_input for code] → [fill_form with code] → [click_button to submit]
+14. DO NOT stop after request_user_input - continue with all remaining actions that use that input
+15. The user will provide the value, and ALL actions will execute in rapid succession without re-analyzing the page
+16. This prevents authentication codes from expiring before submission
 
 CRITICAL: When you include a "request_user_input" action, you MUST ALSO populate the "user_input_request" field at the top level of your response with the same information.
 
