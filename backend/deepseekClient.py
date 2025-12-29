@@ -105,7 +105,7 @@ class DeepSeekClient:
         raw_content = response.choices[0].message.content
         print("=" * 60)
         print("RAW LLM RESPONSE (make_decision):")
-        print(raw_content[:500])
+        print(raw_content)
         print("=" * 60)
 
         try:
@@ -177,7 +177,7 @@ class DeepSeekClient:
             print("Timeout waiting for user input")
             raise Exception("User input timeout")
 
-    # provide_user_input only called externally, allows external to provide input without weird timing
+    # provide_user_input only called externally, allows external to provide input without  timing errors
     def provide_user_input(self, value: str):
         """Called when user provides input via WebSocket (from different thread)"""
         print(f"Received user input: {value}")

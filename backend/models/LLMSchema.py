@@ -2,11 +2,22 @@ from pydantic import BaseModel
 from typing import List, Optional, Literal, Dict, Any
 
 
+class FormFieldOption(BaseModel):
+    value: str
+    label: str
+
+
 class FormField(BaseModel):
     name: str
     type: str
     label: Optional[str] = None
-    option_description: Optional[List[str]] = None
+    options: Optional[List[FormFieldOption]] = (
+        None  # For radio/checkbox with few options
+    )
+    options_example: Optional[List[FormFieldOption]] = (
+        None  # For dropdowns with many options
+    )
+    options_count: Optional[int] = None  # Total number of options available
     required: bool = False
     placeholder: Optional[str] = None
     current_value: Optional[str] = None

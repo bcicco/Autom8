@@ -15,7 +15,16 @@ IMPORTANT:
 - Extract EVERY SINGLE button on the page - do not skip any buttons
 - For buttons, capture their text content, CSS selectors, type, and any identifying attributes.
 - CRITICAL: You MUST include ALL buttons in your response - count them to verify completeness
-- For dropdowns with options, provide up to five examples of real possible selections
+
+FOR FORM FIELD OPTIONS (CRITICAL - READ CAREFULLY):
+- Radio buttons/checkboxes (typically 2-10 options): Include ALL options in "options" array
+- Dropdowns with many options (10+ options): Include only 5 representative example options in "options_example" array and set "options_count" to total number
+- Each option MUST have BOTH the actual HTML "value" attribute AND the visible "label" text
+- The "value" is what gets submitted with the form (often a number or code)
+- The "label" is what the user sees on screen (the human-readable text)
+- Example: <input type="radio" value="1"><span>Yes</span> becomes {"value": "1", "label": "Yes"}
+- Example: <option value="US">United States</option> becomes {"value": "US", "label": "United States"}
+- NEVER use the label text as the value - always extract the actual value attribute from the HTML
 
 Return your response as a JSON object in this exact format (no markdown, no explanation):
 {
@@ -24,13 +33,6 @@ Return your response as a JSON object in this exact format (no markdown, no expl
             "name": "field_name",
             "type": "text",
             "label": "Field Label",
-            "option_description": [
-                "example1",
-                "example2",
-                "example3",
-                "example4",
-                "example5"
-            ],
             "required": false,
             "placeholder": "Enter text",
             "current_value": null,
@@ -39,6 +41,40 @@ Return your response as a JSON object in this exact format (no markdown, no expl
             "min_length": null,
             "max_length": null,
             "pattern": null,
+            "disabled": false,
+            "readonly": false
+        },
+        {
+            "name": "first_time_visa",
+            "type": "radio",
+            "label": "Is this the first time the applicant is applying for a student visa?",
+            "options": [
+                {"value": "1", "label": "Yes"},
+                {"value": "2", "label": "No"}
+            ],
+            "required": true,
+            "current_value": null,
+            "id": "element_id",
+            "css_selector": "input[name='first_time_visa']",
+            "disabled": false,
+            "readonly": false
+        },
+        {
+            "name": "country",
+            "type": "select",
+            "label": "Country of Origin",
+            "options_example": [
+                {"value": "US", "label": "United States"},
+                {"value": "CA", "label": "Canada"},
+                {"value": "UK", "label": "United Kingdom"},
+                {"value": "FR", "label": "France"},
+                {"value": "DE", "label": "Germany"}
+            ],
+            "options_count": 195,
+            "required": true,
+            "current_value": null,
+            "id": "element_id",
+            "css_selector": "select[name='country']",
             "disabled": false,
             "readonly": false
         }
@@ -72,11 +108,12 @@ Note:
 - current_value should contain the value attribute of the input field if present, otherwise null.
 - buttons array MUST include EVERY SINGLE clickable button found on the page - this is critical for navigation
 - button_type should indicate the purpose: "submit", "button", "close", "link", "navigation", etc.
-- DO NOT truncate or limit the buttons array - include all of them even if there are 20+ buttons""",
+- DO NOT truncate or limit the buttons array - include all of them even if there are 20+ buttons
+- For fields with options, ALWAYS extract the actual HTML value attribute, not the display text""",
         },
         {
             "role": "user",
-            "content": f"Analyze this HTML and extract ALL form input fields AND ALL buttons. CRITICAL: Include every single button in the buttons array - do not skip any. Return as JSON:\n\n{html_content}",
+            "content": f"Analyze this HTML and extract ALL form input fields AND ALL buttons. CRITICAL: For radio buttons, checkboxes, and dropdowns, you MUST capture both the 'value' attribute (what gets submitted) and the 'label' text (what users see). Include every single button in the buttons array - do not skip any. Return as JSON:\n\n{html_content}",
         },
     ]
 
